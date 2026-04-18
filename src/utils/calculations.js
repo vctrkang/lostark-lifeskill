@@ -1,27 +1,28 @@
-import { CRAFT_OUTPUT, CRAFT_GOLD_COST, MARKET_TAX } from '../data/recipes';
+import { MARKET_TAX, FUSIONS } from '../data/recipes';
 
 /**
- * @param {object} skill        - skill definition from SKILLS array
- * @param {object} prices       - { [materialId]: number, fusion: number }
- * @param {number} greatSuccess - great success rate as decimal (e.g. 0.3 for 30%)
- * @returns {object} calculated results for this skill
+ * @param {object} skill              - skill definition from SKILLS array
+ * @param {object} prices             - { [materialId]: number, [fusionId]: number }
+ * @param {number} greatSuccess       - great success rate as decimal (e.g. 0.3 for 30%)
+ * @param {number} craftCostReduction - craft fee reduction as decimal
+ * @param {object} fusion             - fusion type definition from FUSIONS array
  */
-export function calcSkill(skill, prices, greatSuccess, craftCostReduction = 0) {
-  const fusionPrice = prices['fusion'] ?? 0;
+export function calcSkill(skill, prices, greatSuccess, craftCostReduction = 0, fusion = FUSIONS[0]) {
+  const fusionPrice = prices[fusion.id] ?? 0;
   const gsRate = Math.max(0, Math.min(1, greatSuccess));
   const reductionRate = Math.max(0, Math.min(1, craftCostReduction));
 
-  // Cost to buy all materials for one craft batch (produces CRAFT_OUTPUT fusions).
-  // prices are per bundle of 100 units; qty is the item count (e.g. 33 units per batch).
-  const matCost = skill.materials.reduce((sum, mat) => {
-    return sum + (prices[mat.id] ?? 0) * mat.qty / 100;
+  // Cost to buy all materials for one craft batch (produces fusion.craftOutput fusions).
+  // prices are per bundle of 100 units; matQtys[i] is the item count for tier i.
+  const matCost = skill.materials.reduce((sum, mat, i) => {
+    return sum + (prices[mat.id] ?? 0) * fusion.matQtys[i] / 100;
   }, 0);
 
-  const craftFee = CRAFT_GOLD_COST * (1 - reductionRate);
+  const craftFee = fusion.craftGoldCost * (1 - reductionRate);
   const craftCost = matCost + craftFee;
 
   // Expected fusion output accounting for great success (doubles output)
-  const expectedOutput = CRAFT_OUTPUT * (1 + gsRate);
+  const expectedOutput = fusion.craftOutput * (1 + gsRate);
 
   // Revenue from selling expected output after market tax
   const sellRevenue = expectedOutput * fusionPrice * (1 - MARKET_TAX);
@@ -35,7 +36,7 @@ export function calcSkill(skill, prices, greatSuccess, craftCostReduction = 0) {
   const rawSellValue = matCost * (1 - MARKET_TAX);
 
   // Is crafting better than just selling the raw mats?
-  const craftVsRaw = sellRevenue - rawSellValue - CRAFT_GOLD_COST;
+  const craftVsRaw = sellRevenue - rawSellValue - craftFee;
 
   // --- Category 2: personal use ---
   // Cost per fusion if you craft (using purchased mats)
@@ -43,11 +44,11 @@ export function calcSkill(skill, prices, greatSuccess, craftCostReduction = 0) {
   // Cost to buy fusion directly = fusionPrice (you pay listed price, no extra tax as buyer)
   const savings = fusionPrice - costPerFusionViaCraft;
 
-  const materialBreakdown = skill.materials.map(mat => ({
+  const materialBreakdown = skill.materials.map((mat, i) => ({
     name: mat.name,
-    qty: mat.qty,
+    qty: fusion.matQtys[i],
     price: prices[mat.id] ?? 0,
-    cost: (prices[mat.id] ?? 0) * mat.qty,
+    cost: (prices[mat.id] ?? 0) * fusion.matQtys[i],
   }));
 
   const missingMaterials = skill.materials
@@ -69,15 +70,15 @@ export function calcSkill(skill, prices, greatSuccess, craftCostReduction = 0) {
     sellRevenue,
     fusionPrice,
     // Category 1
-    profitFromCrafting,     // net gold if buy mats → craft → sell
-    profitPerFusion,        // per fusion unit
-    rawSellValue,           // gold from selling mats raw
-    craftVsRaw,             // positive = crafting beats selling raw
+    profitFromCrafting,
+    profitPerFusion,
+    rawSellValue,
+    craftVsRaw,
     worthCraftingForSale: profitFromCrafting > 0,
     worthCraftingOverRaw: craftVsRaw > 0,
     // Category 2
     costPerFusionViaCraft,
-    savingsPerFusion: savings,  // positive = crafting cheaper than buying
+    savingsPerFusion: savings,
     worthCraftingForSelf: savings > 0,
   };
 }

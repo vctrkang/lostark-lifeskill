@@ -1,12 +1,30 @@
-export const CRAFT_OUTPUT = 10;
-export const CRAFT_GOLD_COST = 400;
 export const MARKET_TAX = 0.05;
 
-export const FUSION = {
-  id: 'fusion',
-  name: 'Abidos Fusion Material',
-  icon: '💎',
-};
+export const FUSIONS = [
+  {
+    id: 'fusion',
+    name: 'Abidos Fusion Material',
+    shortName: 'Abidos',
+    icon: '💎',
+    craftOutput: 10,
+    craftGoldCost: 400,
+    matQtys: [33, 45, 86],
+  },
+  {
+    id: 'fusion_superior',
+    name: 'Superior Abidos Fusion Material',
+    shortName: 'Superior',
+    icon: '💠',
+    craftOutput: 10,
+    craftGoldCost: 520,
+    matQtys: [43, 59, 112],
+  },
+];
+
+// Backward-compat aliases used by PriceTable and ocr.js
+export const FUSION = FUSIONS[0];
+export const CRAFT_OUTPUT = FUSIONS[0].craftOutput;
+export const CRAFT_GOLD_COST = FUSIONS[0].craftGoldCost;
 
 export const SKILLS = [
   {
@@ -14,9 +32,9 @@ export const SKILLS = [
     name: 'Gathering',
     icon: '🌿',
     materials: [
-      { id: 'abidos_wild_flower', name: 'Abidos Wild Flower', qty: 33, icon: '🌺' },
-      { id: 'shy_wild_flower',    name: 'Shy Wild Flower',    qty: 45, icon: '🌷' },
-      { id: 'wild_flower',        name: 'Wild Flower',        qty: 86, icon: '🌸' },
+      { id: 'abidos_wild_flower', name: 'Abidos Wild Flower', icon: '🌺' },
+      { id: 'shy_wild_flower',    name: 'Shy Wild Flower',    icon: '🌷' },
+      { id: 'wild_flower',        name: 'Wild Flower',        icon: '🌸' },
     ],
   },
   {
@@ -24,9 +42,9 @@ export const SKILLS = [
     name: 'Logging',
     icon: '🪓',
     materials: [
-      { id: 'abidos_timber',  name: 'Abidos Timber', qty: 33, icon: '🟧' },
-      { id: 'tender_timber',  name: 'Tender Timber', qty: 45, icon: '🟫' },
-      { id: 'timber',         name: 'Timber',        qty: 86, icon: '🪵' },
+      { id: 'abidos_timber', name: 'Abidos Timber', icon: '🟧' },
+      { id: 'tender_timber', name: 'Tender Timber', icon: '🟫' },
+      { id: 'timber',        name: 'Timber',        icon: '🪵' },
     ],
   },
   {
@@ -34,9 +52,9 @@ export const SKILLS = [
     name: 'Mining',
     icon: '⛏️',
     materials: [
-      { id: 'abidos_iron_ore', name: 'Abidos Iron Ore', qty: 33, icon: '🔶' },
-      { id: 'heavy_iron_ore',  name: 'Heavy Iron Ore',  qty: 45, icon: '🪨' },
-      { id: 'iron_ore',        name: 'Iron Ore',        qty: 86, icon: '🩶' },
+      { id: 'abidos_iron_ore', name: 'Abidos Iron Ore', icon: '🔶' },
+      { id: 'heavy_iron_ore',  name: 'Heavy Iron Ore',  icon: '🪨' },
+      { id: 'iron_ore',        name: 'Iron Ore',        icon: '🩶' },
     ],
   },
   {
@@ -44,9 +62,9 @@ export const SKILLS = [
     name: 'Hunting',
     icon: '🏹',
     materials: [
-      { id: 'abidos_thick_raw_meat', name: 'Abidos Thick Raw Meat', qty: 33, icon: '🥩' },
-      { id: 'treated_meat',          name: 'Treated Meat',          qty: 45, icon: '🍖' },
-      { id: 'thick_raw_meat',        name: 'Thick Raw Meat',        qty: 86, icon: '🥩' },
+      { id: 'abidos_thick_raw_meat', name: 'Abidos Thick Raw Meat', icon: '🥩' },
+      { id: 'treated_meat',          name: 'Treated Meat',          icon: '🍖' },
+      { id: 'thick_raw_meat',        name: 'Thick Raw Meat',        icon: '🥩' },
     ],
   },
   {
@@ -54,9 +72,9 @@ export const SKILLS = [
     name: 'Fishing',
     icon: '🎣',
     materials: [
-      { id: 'abidos_solar_carp', name: 'Abidos Solar Carp', qty: 33, icon: '🐠' },
-      { id: 'redflesh_fish',     name: 'Redflesh Fish',     qty: 45, icon: '🦞' },
-      { id: 'fish',              name: 'Fish',              qty: 86, icon: '🐟' },
+      { id: 'abidos_solar_carp', name: 'Abidos Solar Carp', icon: '🐠' },
+      { id: 'redflesh_fish',     name: 'Redflesh Fish',     icon: '🦞' },
+      { id: 'fish',              name: 'Fish',              icon: '🐟' },
     ],
   },
   {
@@ -64,9 +82,9 @@ export const SKILLS = [
     name: 'Excavating',
     icon: '🔍',
     materials: [
-      { id: 'abidos_relic',  name: 'Abidos Relic',  qty: 33, icon: '🔮' },
-      { id: 'rare_relic',    name: 'Rare Relic',    qty: 45, icon: '🏺' },
-      { id: 'ancient_relic', name: 'Ancient Relic', qty: 86, icon: '🗿' },
+      { id: 'abidos_relic',  name: 'Abidos Relic',  icon: '🔮' },
+      { id: 'rare_relic',    name: 'Rare Relic',    icon: '🏺' },
+      { id: 'ancient_relic', name: 'Ancient Relic', icon: '🗿' },
     ],
   },
 ];

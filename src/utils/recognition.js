@@ -1,6 +1,6 @@
 import Tesseract from 'tesseract.js';
 import { waitForCV } from './cv';
-import { SKILLS, FUSION } from '../data/recipes';
+import { SKILLS, FUSIONS } from '../data/recipes';
 
 /**
  * Reference resolution — templates were generated at this scale.
@@ -10,7 +10,10 @@ import { SKILLS, FUSION } from '../data/recipes';
 export const REF_W = 2560;
 export const REF_H = 1440;
 
-const ALL_IDS = [FUSION.id, ...SKILLS.flatMap(s => s.materials.map(m => m.id))];
+const ALL_IDS = [
+  ...FUSIONS.map(f => f.id),
+  ...SKILLS.flatMap(s => s.materials.map(m => m.id)),
+];
 
 const ANCHOR_THRESHOLD = 0.70;
 const MATCH_THRESHOLD  = 0.80;

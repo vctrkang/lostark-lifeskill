@@ -1,4 +1,4 @@
-import { SKILLS, FUSION } from '../data/recipes';
+import { SKILLS, FUSIONS } from '../data/recipes';
 
 function relativeTime(ts) {
   if (!ts) return null;
@@ -15,7 +15,6 @@ function confidenceLevel(score) {
   if (score >= 0.70) return 'mid';
   return 'low';
 }
-
 
 function PriceInput({ id, label, icon, value, timestamp, onChange, crop }) {
   const age = relativeTime(timestamp);
@@ -56,15 +55,18 @@ export default function PriceTable({ prices, timestamps, onPriceChange, debugCro
   return (
     <div className="price-table">
       <div className="price-section fusion-section">
-        <h3><span className="mat-icon">{FUSION.icon}</span> Fusion Material</h3>
-        <PriceInput
-          id={FUSION.id}
-          label={FUSION.name}
-          value={prices[FUSION.id]}
-          timestamp={timestamps[FUSION.id]}
-          onChange={onPriceChange}
-          crop={cropByMatId[FUSION.id]}
-        />
+        <h3>Fusion Materials</h3>
+        {FUSIONS.map(fusion => (
+          <PriceInput
+            key={fusion.id}
+            id={fusion.id}
+            label={`${fusion.icon} ${fusion.name}`}
+            value={prices[fusion.id]}
+            timestamp={timestamps[fusion.id]}
+            onChange={onPriceChange}
+            crop={cropByMatId[fusion.id]}
+          />
+        ))}
       </div>
 
       <div className="skills-grid">

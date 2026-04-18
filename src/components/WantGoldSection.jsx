@@ -1,89 +1,115 @@
-export default function WantGoldSection({ results }) {
+export default function WantGoldSection({ results, fusionCount }) {
   const ready = results.filter(r => r.hasSufficientData);
   if (ready.length === 0) return null;
 
-  // Craft+sell value is identical for all skills (same fusion price, output, and fee)
-  // = sellRevenue - CRAFT_GOLD_COST (mats assumed free since you farmed them)
-  const craftAndSell = Math.round(ready[0].profitFromCrafting + ready[0].matCost);
-  const outputCount = Math.round(ready[0].expectedOutput);
+  const count = Math.min(400, Math.max(10, Number(fusionCount) || 400));
+  const scale = count / ready[0].expectedOutput;
+  const fusionPrice = ready[0].fusionPrice;
 
-  // Rank by best achievable gold: whichever is higher — sell raw or craft+sell
+  // Section 1: Life Skill Energy Use — sell raw vs craft-and-sell baseline
+  const craftAndSell = Math.round((ready[0].profitFromCrafting + ready[0].matCost) * scale);
   const haveMatsRanked = [...ready]
     .map(r => {
-      const sellRaw = Math.round(r.rawSellValue);
-      const shouldCraft = sellRaw < craftAndSell;
-      return { ...r, sellRaw, shouldCraft, bestGold: Math.max(sellRaw, craftAndSell) };
+      const sellRaw = Math.round(r.rawSellValue * scale);
+      return { ...r, sellRaw, shouldCraft: sellRaw < craftAndSell };
     })
-    .sort((a, b) => b.bestGold - a.bestGold);
+    .sort((a, b) => b.sellRaw - a.sellRaw);
 
-  // Rank by net profit when buying mats, crafting, and selling fusion
+  // Section 2: Material Flipping — buy mats, craft, sell fusion
+  // Baseline is sell-side revenue: what you earn from selling N fusions after market tax.
+  // Each row's craft cost vs this baseline gives the actual profit/loss directly.
+  const MARKET_TAX = 0.05;
+  const flipBaseline = Math.round(fusionPrice * count * (1 - MARKET_TAX));
   const haveGoldRanked = [...ready]
-    .map(r => ({ ...r, profit: Math.round(r.profitFromCrafting) }))
+    .map(r => ({
+      ...r,
+      totalCraftCost: Math.round(r.costPerFusionViaCraft * count),
+      profit: Math.round(r.profitFromCrafting * scale),
+    }))
     .sort((a, b) => b.profit - a.profit);
 
   const fmt = v => Math.abs(v).toLocaleString();
 
   return (
-    <div className="buy-summary">
-      <div className="have-summary-header">
-        <span className="buy-summary-title">I want Gold</span>
-      </div>
+    <div className="gold-sections-grid">
 
-      {/* Sub-section A: Have mats (farmed) */}
-      <div className="goal-sub">
-        <div className="goal-sub-header">
-          <span className="goal-sub-label">If you have mats</span>
+      {/* ── Life Skill Energy Use (amber) ── */}
+      <div className="section-card">
+        <div className="section-header-card amber">
+          <div className="section-eyebrow amber">Life Skill Energy Use</div>
+          <div className="section-title">Sell raw vs craft into fusion</div>
+          <div className="section-desc">Compare raw sell value of your mats against the craft-and-sell baseline.</div>
         </div>
+
         <div className="summary-ref-row">
-          <span className="summary-ref-label">Craft + sell fusion (×{outputCount})</span>
+          <div className="summary-ref-label-group">
+            <span className="summary-ref-label">Baseline — craft and sell {count} fusions</span>
+            <span className="summary-ref-sub">Sell revenue − craft fee</span>
+          </div>
           <span className="summary-ref-val">{craftAndSell.toLocaleString()}g</span>
         </div>
-        <div className="have-rank-col-headers">
-          <span /><span /><span>Sell raw</span><span>vs craft</span>
-        </div>
-        <div className="buy-rank-list">
-          {haveMatsRanked.map((r, i) => {
-            const delta = r.sellRaw - craftAndSell;
-            return (
-              <div key={r.skillId} className="have-rank-row">
-                <span className="buy-rank-pos">{i + 1}</span>
-                <span className="buy-rank-name">{r.skillName}</span>
-                <span className={`have-rank-val ${!r.shouldCraft ? 'have-winner' : 'have-loser'}`}>
-                  {r.sellRaw.toLocaleString()}g
-                </span>
-                <span className="have-rank-delta">
-                  {delta === 0 ? '—' : `${delta > 0 ? '+' : '-'}${fmt(delta)}g`}
-                </span>
-              </div>
-            );
-          })}
+
+        <div className="rank-table">
+          <div className="have-rank-col-headers">
+            <span /><span /><span>Raw sell</span><span>vs craft</span>
+          </div>
+          <div className="buy-rank-list">
+            {haveMatsRanked.map((r, i) => {
+              const delta = r.sellRaw - craftAndSell;
+              return (
+                <div key={r.skillId} className={`have-rank-row ${delta > 0 ? 'row-win' : 'row-loss'}`}>
+                  <span className="buy-rank-pos">{i + 1}</span>
+                  <span className="buy-rank-name">{r.skillName}</span>
+                  <span className={`have-rank-val ${!r.shouldCraft ? 'have-winner' : 'have-loser'}`}>
+                    {r.sellRaw.toLocaleString()}g
+                  </span>
+                  <span className="have-rank-delta">
+                    {delta === 0 ? '—' : `${delta > 0 ? '+' : '-'}${fmt(delta)}g`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Sub-section B: Have gold to invest */}
-      <div className="goal-sub">
-        <div className="goal-sub-header">
-          <span className="goal-sub-label">If you have gold</span>
-          <span className="goal-sub-ref">buy mats → craft → sell fusion (×{outputCount})</span>
+      {/* ── Material Flipping (emerald) ── */}
+      <div className="section-card">
+        <div className="section-header-card emerald">
+          <div className="section-eyebrow emerald">Material Flipping</div>
+          <div className="section-title">Buy mats, craft fusion, resell</div>
+          <div className="section-desc">Profit after mat purchase cost and crafting fee.</div>
         </div>
-        <div className="have-rank-col-headers">
-          <span /><span /><span>Net profit</span><span />
+
+        <div className="summary-ref-row">
+          <div className="summary-ref-label-group">
+            <span className="summary-ref-label">Revenue — sell {count} fusions</span>
+            <span className="summary-ref-sub">Market price × {count} after 5% tax</span>
+          </div>
+          <span className="summary-ref-val">{flipBaseline.toLocaleString()}g</span>
         </div>
-        <div className="buy-rank-list">
-          {haveGoldRanked.map((r, i) => (
-            <div key={r.skillId} className={`have-rank-row ${r.profit <= 0 ? 'row-dim' : ''}`}>
-              <span className="buy-rank-pos">{i + 1}</span>
-              <span className="buy-rank-name">{r.skillName}</span>
-              <span className={`have-rank-val ${r.profit > 0 ? 'have-winner' : 'val-loss'}`}>
-                {r.profit > 0 ? '+' : '-'}{fmt(r.profit)}g
-              </span>
-              <span className={`goal-tag ${r.profit > 0 ? 'tag-profit' : 'tag-loss'}`}>
-                {r.profit > 0 ? 'profit' : 'loss'}
-              </span>
-            </div>
-          ))}
+
+        <div className="rank-table">
+          <div className="have-rank-col-headers">
+            <span /><span /><span>Total cost</span><span>Profit</span>
+          </div>
+          <div className="buy-rank-list">
+            {haveGoldRanked.map((r, i) => (
+              <div key={r.skillId} className={`have-rank-row ${r.profit > 0 ? 'row-win' : 'row-loss'}`}>
+                <span className="buy-rank-pos">{i + 1}</span>
+                <span className="buy-rank-name">{r.skillName}</span>
+                <span className={`have-rank-val ${r.profit > 0 ? 'have-winner' : 'have-loser'}`}>
+                  {r.totalCraftCost.toLocaleString()}g
+                </span>
+                <span className={`have-rank-delta ${r.profit > 0 ? 'delta-profit' : 'delta-loss'}`}>
+                  {r.profit > 0 ? '+' : '-'}{fmt(r.profit)}g
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
     </div>
   );
 }
